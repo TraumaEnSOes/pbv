@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package Test;
+
+message Basic {
+    string item1 = 1;
+    int32 item2 = 2;
+    message Inner {
+        int64 ival = 1;
+    }
+    repeated Inner repeated_inner_message = 3;
+    Inner single_inner_message = 4;
+    double item3 = 5;
+}
