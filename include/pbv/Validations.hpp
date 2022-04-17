@@ -13,6 +13,20 @@ namespace details {
 
 template< typename MSG > using Exp = std::function< bool( const MSG &, TracesStore & ) >;
 
+template< typename RETURN > struct Has;
+
+template< > struct Has< bool > {
+    static bool body( bool result, int max, int min ) {
+        return true;
+    }
+};
+
+template< > struct Has< int > {
+    static bool body( int result, int max, int min ) {
+        return true;
+    }
+};
+
 } // namespace details.
 
 template< typename TYPE, typename MSG, typename LITERAL > details::Exp< MSG > NotEqual( TYPE (MSG::*getter)( ) const, const LITERAL &value ) {
@@ -35,14 +49,10 @@ std::cout << "Equal( )\n";
     return lambda;
 }
 
-template< typename MSG > details::Exp< MSG > Repeated( int (MSG::*counter)( ) const, int min, int max = 0 ) {
-    auto lambda = [counter,min,max]( const MSG &msg, TracesStore &ts ) {
-std::cout << "Repeated( )\n";
+template< typename MSG, typename RETURN > details::Exp< MSG > Has( RETURN (MSG::*getter)( ) const, int max = 0, int min = 1 ) {
+    auto lambda = [getter, max, min]( const MSG &msg, TracesStore &ts ) {
         auto pointer = &msg;
-        auto count = (pointer->*counter)( );
-        return ( max == 0 ) ?
-            ( count >= min ) :
-            ( ( count >= min ) && ( count <= max ) );
+        return details::Has< RETURN >::body( (pointer->*getter)( ), max, min );
     };
 
     return lambda;

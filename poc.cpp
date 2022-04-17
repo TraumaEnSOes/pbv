@@ -21,7 +21,7 @@ std::cout << "InnerValidator::customRule2( )" << std::endl;
 END_VALIDATOR
 
 VALIDATOR( Validator, Test::Basic )
-    Requisite validInner{ pbv::Repeated( &THISPROTO::repeated_inner_message_size, 1 ) };
+    Requisite validInner{ pbv::Has( &THISPROTO::repeated_inner_message_size, 1 ) };
     // Single< InnerValidator >inner{ vengine::details::Dependency( ), &Test::Basic::has_single_inner_message, &Test::Basic::single_inner_message };
     // Repeated< InnerValidator > repeated{ 1, &Test::Basic::repeated_inner_message_size, &Test::Basic::repeated_inner_message };
 END_VALIDATOR
