@@ -13,19 +13,9 @@ namespace details {
 
 template< typename MSG > using Exp = std::function< bool( const MSG &, TracesStore & ) >;
 
-template< typename RETURN > struct Has;
+template< typename MSG > bool AllwaysTrue( const MSG &, TracesStore & ) { return true; }
 
-template< > struct Has< bool > {
-    static bool body( bool result, int max, int min ) {
-        return true;
-    }
-};
-
-template< > struct Has< int > {
-    static bool body( int result, int max, int min ) {
-        return true;
-    }
-};
+template< typename MSG > bool AllwaysFalse( const MSG &, TracesStore & ) { return false; }
 
 } // namespace details.
 
@@ -49,13 +39,52 @@ std::cout << "Equal( )\n";
     return lambda;
 }
 
-template< typename MSG, typename RETURN > details::Exp< MSG > Has( RETURN (MSG::*getter)( ) const, int max = 0, int min = 1 ) {
-    auto lambda = [getter, max, min]( const MSG &msg, TracesStore &ts ) {
-        auto pointer = &msg;
-        return details::Has< RETURN >::body( (pointer->*getter)( ), max, min );
+template< typename MSG > details::Exp< MSG > Has( int (MSG::*counter)( ) const, int min = 1, int max = 0 ) {
+    auto lambda = [counter, min, max]( const MSG &msg, TracesStore & ) {
+        const MSG *pointer = &msg;
+        int count = (pointer->*counter)( );
+
+        if( count < min ) { return false; }
+        if( max && ( count > max ) ) { return false; }
+
+        return true;
     };
 
     return lambda;
+}
+
+template< typename MSG > details::Exp< MSG > Has( bool (MSG::*counter)( ) const, int min = 1, int max = 0 ) {
+    auto lambda = [counter, min, max]( const MSG &msg, TracesStore & ) {
+        const MSG *pointer = &msg;
+
+        return (pointer->*counter)( );
+    };
+
+    return lambda;
+}
+
+template< typename VALIDATOR, typename MSG, typename INNER = typename VALIDATOR::THISPROTO > details::Exp< MSG > AllAreValid( bool (MSG::*conuter)( ) const, const INNER &(MSG::*getter)( ) const ) {
+    return details::AllwaysTrue< MSG >;
+}
+
+template< typename VALIDATOR, typename MSG, typename INNER = typename VALIDATOR::THISPROTO > details::Exp< MSG > AllAreValid( int (MSG::*conuter)( ) const, const INNER &(MSG::*getter)( int ) const ) {
+    return details::AllwaysTrue< MSG >;
+}
+
+template< typename VALIDATOR, typename MSG, typename INNER = typename VALIDATOR::THISPROTO > details::Exp< MSG > LeastOneIsValid( bool (MSG::*conuter)( ) const, const INNER &(MSG::*getter)( ) const ) {
+    return details::AllwaysTrue< MSG >;
+}
+
+template< typename VALIDATOR, typename MSG, typename INNER = typename VALIDATOR::THISPROTO > details::Exp< MSG > LeastOneIsValid( int (MSG::*conuter)( ) const, const INNER &(MSG::*getter)( int ) const ) {
+    return details::AllwaysTrue< MSG >;
+}
+
+template< typename VALIDATOR, typename MSG, typename INNER = typename VALIDATOR::THISPROTO > details::Exp< MSG > NoneIsValid( bool (MSG::*conuter)( ) const, const INNER &(MSG::*getter)( ) const ) {
+    return details::AllwaysTrue< MSG >;
+}
+
+template< typename VALIDATOR, typename MSG, typename INNER = typename VALIDATOR::THISPROTO > details::Exp< MSG > NoneIsValid( int (MSG::*conuter)( ) const, const INNER &(MSG::*getter)( int ) const ) {
+    return details::AllwaysTrue< MSG >;
 }
 
 } // namespace pbv.
